@@ -1,0 +1,11 @@
+Sprites:
+Baby
+House plan (top-down view of a relatively simple house)
+
+Priorities:
+Baby sprite + baby actions development
+House sprite + interactions development
+Hunger + mood meter for baby sprites and development
+A way to represent time in-game
+
+TBD- Budget? How?
