@@ -1,0 +1,25 @@
+Daycare pricing:
+
+%source: https://www.reddit.com/r/Columbus/comments/1iiro64/childcare_cost_2025_edition/
+%it's past-pineapple's comment because they have an older infant, so it'll be roughly similar to what the player should be having. The    %variance is
+%for the child care subsidy that players can receive depending on income
+%source 2 for the child care subsidy:
+%https://www.odjfs.state.oh.us/forms/num/DCY01309/pdf/ and https://aspe.hhs.gov/sites/default/files/documents/dd73d4f00d8a819d10b2fdb70d254f7b/detailed-guidelines-2025.pdf
+%being below 39k a year is typical of working-class and lower-class
+%families, and I'm basing this off a family of 3
+%https://childrenandyouth.ohio.gov/for-families/early-care-education/child-care-choice-program#:~:text=Apply%20for%20Child%20Care%20Assistance%20through%20the,below%20for%20more%20information%20on%20PFCC%20requirements.
+% Columbus also has a sliding scale for childcare assistance up to 79k a year absolute maximum, which is why I have middle class with some assistance. Upper middle class
+%is defined as 100k-199k a year which will not receive assistance, and middle class is 50k-100k.
+
+Diaper pricing: 
+
+Economy fluctuates and stuff, but these parents should only need a 100-pack of diapers at most. 
+https://www.walmart.com/ip/Pampers-SWADDLERS-360-Diapers-Base-Version-12X-4-Maxi/14754558615?wl13=2098&selectedSellerId=0&wmlspartner=wlpa
+
+
+Character creation:
+% source:
+% https://pb.openlcc.net/socl120oerworkbook/chapter/7-3-social-class-in-the-united-states/
+% I included homeless as its' own separate class instead of combining it with either working or lower class
+% I also didn't use the subjective values, I used the values under Figure 7.4
+% I combined homeless percentage with lower class in order to not make the game impossible if you're unlucky
