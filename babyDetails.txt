@@ -9,3 +9,7 @@ Hunger + mood meter for baby sprites and development
 A way to represent time in-game
 
 TBD- Budget? How?
+Most difficult parts of raising an IRL child that NEED to be in the game:
+1. Random sleep deprivation - baby wakes up at random times and cries each night                             
+2. Random cries - baby has a different cry for each situation, e.g. tired, hungry, dirty diaper
+3. Random diaper changes
