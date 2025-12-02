@@ -1,0 +1,390 @@
+% For easy difficulty: Change each of the stats on lines 301-303 to -10
+% For hard difficulty: Change each of the stats on lines 301-303 to -30
+% For both of the above: Adjust the stat increases on lines 354-374
+% accordingly.
+
+clc;
+clear;
+close;
+
+normalbaby = simpleGameEngine("sprite_sheet.png", 99, 99, 10, [200,200,200]);
+
+% Sprite indices
+SPR_BOTTLE = 7;
+SPR_WARNING = 10;
+SPR_DRUMSTK = 15;
+SPR_TOYS = 8;
+SPR_TV = 9;
+SPR_MOON = 21;
+SPR_BABY = 14;
+SPR_CRYBABY = 13;
+SPR_BLACK = 2;
+SPR_TOPLEFT = 29;
+SPR_BTMLEFT = 30;
+SPR_TOPRIGHT = 17;
+SPR_BTMRIGHT = 18;
+SPR_ROOM = 23;
+SPR_TOPROOM = 24;
+SPR_BTMROOM = 35;
+SPR_LEFTROOM = 6;
+SPR_RIGHTROOM = 36;
+SPR_SUN = 3;
+SPR_SMTBL = 31;
+SPR_LLTABLE = 32;
+SPR_LRTABLE = 33;
+SPR_FLTABLE = 26;
+SPR_FRTABLE = 27;
+SPR_CRIB = 34;
+SPR_MOODBAR_FULL = 28;    
+SPR_MOODBAR_MED = 19;     
+SPR_MOODBAR_LOW = 20;     
+SPR_MOODBAR_EMPTY = 22;   
+SPR_SHOPPING = 12;   
+SPR_BINKIE = 25;
+
+
+foreground = ones(12,10);
+background = ones(12,10);
+
+background(:,:) = SPR_ROOM;
+background(1:2,:) = SPR_BLACK; 
+background(3,2:10) = SPR_TOPROOM;
+background(3,1) = SPR_TOPLEFT;
+background(3,10) = SPR_TOPRIGHT;
+background(4:11,1) = SPR_LEFTROOM;
+background(12,1) = SPR_BTMLEFT;
+background(12,2:9) = SPR_BTMROOM;
+background(12,10) = SPR_BTMRIGHT;
+background(4:11,10) = SPR_RIGHTROOM;
+foreground(1,1) = SPR_BLACK;  % Start with no bottles visible
+foreground(6,7) = SPR_DRUMSTK;
+foreground(5,4) = SPR_TOYS;
+foreground(6,4) = SPR_TV;
+foreground(1,10) = SPR_MOON;
+background(6,4) = SPR_SMTBL;
+background(5,7) = SPR_FLTABLE;
+background(5,8) = SPR_FRTABLE;
+background(6,7) = SPR_LLTABLE;
+background(6,8) = SPR_LRTABLE;
+background(10,7) = SPR_CRIB;
+foreground(10,7) = SPR_BABY;
+foreground(2,10) = SPR_MOODBAR_FULL; 
+foreground(5,5) = SPR_BINKIE;
+
+spritesheet = [1:6;7:12;13:18;19:24;25:30;31:36];
+
+[playerClass, baby_gender, budget] = createChar();
+[diaper_price] = diaperPricing();
+[FormulaCost, FormulaCount] = Shopping();
+[birthmonth,birthday]=baby_birthday();
+
+%baby variables
+baby_hunger = 100;      % 0 = starving, 100 = full
+baby_mood = 100;        % 0 = very unhappy, 100 = happy
+baby_entertainment = 100; % 0 = bored, 100 = entertained
+baby_diaper = 100;      % 0 = needs change, 100 = clean
+
+%parent variables
+parent_energy = 100;    % 0 = exhausted, 100 = well-rested
+parent_mood = 100;      % 0 = burned out, 100 = happy
+parent_budget = (budget - diaper_price) - FormulaCost; %Player notified about initial deduction
+
+game_time = 0;          % Game time counter
+is_night = false;       % Day/night cycle, necessary for random waking elements
+
+% Baby state
+cry_reason = '';        % 'hungry', 'tired', 'diaper', 'bored', 'random'
+
+fprintf('Your baby is %s\n', baby_gender);
+fprintf('Your baby was born on %s %i\n',birthmonth, birthday)
+fprintf('Your family class: %s\n', playerClass);
+fprintf('Your budget for the rest of the game is %3i\n',budget)
+fprintf('Diapers will cost you %. 2f for this game, which has already been taken out of your account.\n',budget-diaper_price)
+
+
+if FormulaCount > 1
+    fprintf('Formula will cost you %.2f for this game, which has already been taken out of your account.  \nYou have %i bottles to start with.\n',FormulaCost,FormulaCount)
+else
+    fprintf('Formula will cost you %.2f for this game (15.00 per bottle), which has already been taken out of your account.  \nYou have %i bottle to start with.\n',FormulaCost,FormulaCount)
+end
+fprintf("Your starting budget will be %.2f\n",parent_budget)
+
+playAgain = 'y';
+while playAgain == 'y'
+    
+    game_over = false;
+    baby_hunger = 100;
+    baby_mood = 100;
+    baby_entertainment = 100;
+    baby_diaper = 100;
+    parent_energy = 100;
+    parent_mood = 100;
+    parent_budget = (budget - diaper_price) - FormulaCost;
+    game_time = 0;
+    is_night = false;
+    baby_crying = false;
+    cry_reason = '';
+
+    while ~game_over
+
+        if (baby_crying == true)
+            foreground(10,7) = SPR_CRYBABY;
+            drawScene(normalbaby,background,foreground)
+            title("Baby is crying!")
+        end
+        
+
+        game_time = game_time + 1;
+
+        if mod(game_time, 100) > 50
+            is_night = true;
+            foreground(1,10) = SPR_MOON;
+        else
+            is_night = false;
+            foreground(1,10) = SPR_SUN;
+        end
+
+        % Update mood bar sprite based on baby_mood level
+        if baby_mood > 75
+            foreground(2,10) = SPR_MOODBAR_FULL;
+            baby_crying = false;
+        elseif baby_mood > 50
+            foreground(2,10) = SPR_MOODBAR_MED;
+            baby_crying = false;
+        elseif baby_mood > 25
+            foreground(2,10) = SPR_MOODBAR_LOW;
+            baby_crying = true;
+        else
+            foreground(2,10) = SPR_MOODBAR_EMPTY;
+        end
+
+        % Random diaper event
+        if rand() < 0.01
+            baby_diaper = 0;
+        end
+
+        % Check crying conditions
+        if baby_hunger < 30 && ~baby_crying
+            baby_crying = true;
+            cry_reason = "hungry";
+
+        elseif baby_diaper < 10 && ~baby_crying
+            baby_crying = true;
+            cry_reason = 'diaper';
+
+        elseif baby_entertainment < 20 && ~baby_crying
+            baby_crying = true;
+            cry_reason = 'bored';
+        end
+
+        % Display formula bottles at top
+        bottle_slots = FormulaCount;
+        if FormulaCount > 0
+            for i = 1:bottle_slots
+                foreground(1, i) = SPR_BOTTLE;
+            end
+            for i = (bottle_slots+1):9
+                foreground(1, i) = SPR_BLACK;
+            end
+        else
+            foreground(1, 1:9) = SPR_BLACK;
+        end
+
+        % Show shopping button if low on bottles
+        if FormulaCount <= 1
+            foreground(2, 1) = SPR_SHOPPING;
+        else
+            foreground(2, 1) = SPR_BLACK;
+        end
+        
+        if baby_diaper < 20
+            foreground(2,2) = SPR_WARNING;
+        else
+            foreground(2,2) = SPR_BLACK;
+        end
+        
+        drawScene(normalbaby, background, foreground);
+        
+        % Update title and xlabel based on game state to give information
+        if baby_crying
+            foreground(10,7) = SPR_CRYBABY;
+            drawScene(normalbaby,background,foreground)
+            if cry_reason == "hungry"
+                title("Your baby is hungry - Click to feed!");
+            elseif cry_reason == "diaper"
+                title("Diaper change! Click the baby to change!");
+            elseif cry_reason == "bored"
+                title("Your baby is bored!");
+            end
+        else
+            title("Baby Simulator");
+            ylabel("Click to advance the day")
+        end
+        
+        xlabel(sprintf('Hunger: %.0f | Mood: %.0f | Entertainment: %.0f | Bottles: %i | Money Remaining: %i', ... 
+            baby_hunger, baby_mood, baby_entertainment, FormulaCount));
+
+        %normal crying events
+        if baby_crying == true && cry_reason == "hungry"
+            title("Your baby is hungry")
+            xlabel("Click on the bottle to feed!")
+            
+            [r,c] = getMouseInput(normalbaby);
+
+            if r == 1 && c <= FormulaCount && c <= 9 && FormulaCount > 0
+                FormulaCount = FormulaCount - 1;
+                baby_hunger = (baby_hunger + 50 * (parent_energy / 100));
+                if baby_hunger > 100
+                    baby_hunger = 100;
+                end
+                title("Baby is feeding now.");
+                pause(1);
+                baby_crying = false;
+                cry_reason = '';
+            
+            else
+                fprintf('No formula bottles left or wrong selection!\n');
+            end
+
+        elseif baby_crying == true && cry_reason == "diaper"
+            title("WARNING: Diaper needs changing")
+            title("Click to change diaper")
+            [r,c]=getMouseInput(normalbaby);
+
+            if r==10 && c==7
+                baby_diaper = 100;
+                fprintf('Diaper changed successfully.  Diaper level is now %.0f\n', baby_diaper);
+                baby_crying=false;
+                cry_reason='';
+            end
+
+        elseif baby_crying == true && cry_reason == "bored"
+            title("Your baby is bored")
+            xlabel("[Press enter to continue]")
+            k=getKeyboardInput(normalbaby);
+            title("Choose some entertainment: binkie, toys, or drumstick")
+            [r,c]=getMouseInput(normalbaby);
+
+            if r==5 && c==5
+                title("You gave the baby his binkie")
+                pause(1);
+                baby_mood=baby_mood+20;
+                baby_entertainment=baby_entertainment+40;
+                parent_mood=parent_mood+5;
+                parent_energy=parent_energy+5;
+                baby_crying=false;
+                cry_reason='';
+
+            elseif r==5 && c==4
+                title("The baby is playing with his toys")
+                pause(1);
+                baby_mood=baby_mood+30;
+                baby_entertainment=baby_entertainment+60;
+                parent_mood=parent_mood+10;
+                parent_energy=parent_energy+5;
+                baby_crying=false;
+                cry_reason='';
+
+            elseif r==6 && c==7
+                title("The baby is now playing with drumstick")
+                pause(1);
+                baby_mood=baby_mood+25;
+                baby_entertainment=baby_entertainment+50;
+                parent_mood=parent_mood+15;
+                parent_energy=parent_energy+10;
+                baby_crying=false;
+                cry_reason='';
+            end
+        else
+            %wait for click and decrease stats
+            [r,c] = getMouseInput(normalbaby);
+            
+            % lower stats by 10 on each click, I increased it by 30 to make
+            % it more challenging
+            baby_hunger = baby_hunger - 30;
+            baby_mood = baby_mood - 30;
+            baby_entertainment = baby_entertainment - 30;
+            
+            
+            
+            
+            % 30% chance of quick time event (qte) after any click
+            if rand() < 0.3
+                qte_type = randi(2);                
+                if qte_type == 1
+                    % Baby wants toys
+                    title("QUICK! Baby wants his toys!")
+                    xlabel("Click on the toys NOW (row 5, col 4)!")
+                    tic;
+                    [r,c] = getMouseInput(normalbaby);
+                    reaction_time = toc;
+                    
+                    if r == 5 && c == 4 && reaction_time < 2
+                        baby_mood = baby_mood + 20;
+                        baby_entertainment = baby_entertainment + 30;
+                        title("Baby is happy again!");
+                        pause(1);
+                    else
+                        baby_mood = baby_mood - 15;
+                        title('Too slow or wrong item');
+                        pause(0.5);
+                    end
+                    
+                elseif qte_type == 2
+                    % Baby wants chicken leg
+                    title("QUICK!  Baby wants chicken leg!")
+                    xlabel("Click on the drumstick NOW!")
+                    
+                    tic;
+                    [r,c] = getMouseInput(normalbaby);
+                    reaction_time = toc;
+                    
+                    if r == 6 && c == 7 && reaction_time < 2
+                        baby_hunger = baby_hunger + 25;
+                        baby_mood = baby_mood + 10;
+                        
+                        title("Yum! Baby ate it!");
+                        pause(1);
+                    else
+                        baby_mood = baby_mood - 15;
+                        title('Too slow or wrong item!');
+                        pause(0.5);
+                    end
+                end
+            end
+        end
+        if baby_hunger <= 100
+            if r == 1 && c == FormulaCount
+                baby_hunger = baby_hunger + 40;
+                FormulaCount = FormulaCount - 1;
+            elseif r == 5 && c == 4
+                baby_mood = baby_mood + 30;
+            elseif r == 5 && c == 5
+                baby_entertainment = baby_entertainment + 20;
+            elseif r == 2 && c == 1 && FormulaCount <= 1
+                % for going shopping
+                [newFormulaCost, newFormulaCount] = Shopping();
+                parent_budget = parent_budget - newFormulaCost;
+                if parent_budget > 0
+                    FormulaCount = FormulaCount + newFormulaCount;
+                    baby_crying = false;
+                    cry_reason = '';
+                    xlabel("Your budget is now " + parent_budget)
+                else
+                    title("You cannot afford more bottles!")
+                end
+            end
+        end
+        if baby_mood <= 0
+            drawScene(normalbaby,2,2)
+            title('Game Over! Baby is too unhappy.\n');
+            playAgainQuestion = lower(input("Do you want to play again? Y/N: ","s"));
+            if playAgainQuestion == 'n'
+                playAgain = 'n';
+            else
+                playAgain = 'y';
+            end
+            game_over = true;
+        end
+    end
+end
